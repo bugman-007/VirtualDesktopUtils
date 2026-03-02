@@ -1,3 +1,5 @@
+[![.NET](https://github.com/woanware/VirtualDesktopUtils/actions/workflows/dotnet.yml/badge.svg)](https://github.com/woanware/VirtualDesktopUtils/actions/workflows/dotnet.yml)
+
 # VirtualDesktopUtils
 
 VirtualDesktopUtils is a Windows 11 WPF utility for moving windows between virtual desktops via a hotkey-triggered picker popup, direct hotkeys, and optional system-menu injection. Pure WPF — no Windows Forms dependency.
