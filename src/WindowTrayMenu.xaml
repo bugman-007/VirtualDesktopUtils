@@ -48,22 +48,14 @@
   </Window.Resources>
 
   <Border Padding="8">
-    <Border
-      CornerRadius="12"
-      MinWidth="180"
-    >
+    <Border CornerRadius="12" MinWidth="180">
       <Border.Background>
         <SolidColorBrush Color="#2C2C2C" />
       </Border.Background>
       <Border.Effect>
         <DropShadowEffect BlurRadius="20" ShadowDepth="2" Opacity="0.5" Color="Black" />
       </Border.Effect>
-      <Border
-        CornerRadius="12"
-        BorderThickness="1"
-        BorderBrush="#40FFFFFF"
-        Padding="6"
-      >
+      <Border CornerRadius="12" BorderThickness="1" BorderBrush="#40FFFFFF" Padding="6">
         <StackPanel>
           <Button Content="Show" Click="Show_Click" Style="{StaticResource TrayMenuItem}" />
           <Button Content="Refresh" Click="Refresh_Click" Style="{StaticResource TrayMenuItem}" />
