@@ -20,12 +20,9 @@ public partial class WindowMain : Window
 
     private readonly RuntimeConfigService _runtimeConfigService;
     private readonly VirtualDesktopService _virtualDesktopService;
-    private readonly WindowDiscoveryService _windowDiscoveryService;
-    private readonly WindowMenuInjectionService _windowMenuInjectionService;
     private readonly GlobalHotkeyService _globalHotkeyService = new();
     private readonly ObservableCollection<RefreshIntervalOption> _refreshIntervals = new();
     private readonly System.Windows.Threading.DispatcherTimer _autoRefreshTimer;
-    private string _lastDesktopSignature = string.Empty;
 
     // Captured hotkey state
     private uint _pickerModifiers;
@@ -36,8 +33,6 @@ public partial class WindowMain : Window
     {
         _runtimeConfigService = runtimeConfigService;
         _virtualDesktopService = new VirtualDesktopService(_runtimeConfigService);
-        _windowDiscoveryService = new WindowDiscoveryService(_virtualDesktopService);
-        _windowMenuInjectionService = new WindowMenuInjectionService(_virtualDesktopService, _windowDiscoveryService);
 
         InitializeComponent();
 
@@ -57,7 +52,6 @@ public partial class WindowMain : Window
         RefreshIntervalComboBox.SelectedItem = _refreshIntervals.First(option => option.Seconds == 3);
         AutoRefreshCheckBox.IsChecked = true;
         GuidAutoUpdateCheckBox.IsChecked = _runtimeConfigService.IsGuidAutoUpdateOnStartupEnabled();
-        ContextMenuCheckBox.IsChecked = _runtimeConfigService.IsContextMenuEnabled();
 
         LoadSavedHotkeys();
 
@@ -118,7 +112,6 @@ public partial class WindowMain : Window
     {
         _autoRefreshTimer.Stop();
         _globalHotkeyService.Dispose();
-        _windowMenuInjectionService.Stop();
     }
 
     public void UpdateStatus(string message)
@@ -158,11 +151,6 @@ public partial class WindowMain : Window
     {
         RefreshRuntimeState();
 
-        if (ContextMenuCheckBox.IsChecked == true)
-        {
-            _windowMenuInjectionService.Start(UpdateStatus);
-        }
-
         ApplyAutoRefreshSettings();
     }
 
@@ -175,18 +163,6 @@ public partial class WindowMain : Window
 
     private void AutoRefreshCheckBox_OnChecked(object sender, RoutedEventArgs e) => ApplyAutoRefreshSettings();
     private void AutoRefreshCheckBox_OnUnchecked(object sender, RoutedEventArgs e) => ApplyAutoRefreshSettings();
-
-    private void ContextMenuCheckBox_OnChecked(object sender, RoutedEventArgs e)
-    {
-        _runtimeConfigService.SetContextMenuEnabled(true);
-        if (IsLoaded) _windowMenuInjectionService.Start(UpdateStatus);
-    }
-
-    private void ContextMenuCheckBox_OnUnchecked(object sender, RoutedEventArgs e)
-    {
-        _runtimeConfigService.SetContextMenuEnabled(false);
-        if (IsLoaded) _windowMenuInjectionService.Stop();
-    }
 
     private void GuidAutoUpdateCheckBox_OnChecked(object sender, RoutedEventArgs e) =>
         _runtimeConfigService.SetGuidAutoUpdateOnStartupEnabled(true);
@@ -369,7 +345,6 @@ public partial class WindowMain : Window
         var (moved, _) = _virtualDesktopService.MoveWindowToDesktop(targetWindow, targetDesktop.Id);
         if (moved)
         {
-            _windowMenuInjectionService.InvalidateCommands();
             _virtualDesktopService.SwitchToDesktop(targetDesktop.Id);
         }
     }
@@ -384,21 +359,14 @@ public partial class WindowMain : Window
         var ownHandle = new WindowInteropHelper(this).Handle;
         if (targetWindow == ownHandle || targetWindow == nint.Zero) return;
 
-        _activePicker = new WindowPopUp(_virtualDesktopService, _windowMenuInjectionService, targetWindow);
+        _activePicker = new WindowPopUp(_virtualDesktopService, targetWindow);
         _activePicker.Closed += (_, _) => _activePicker = null;
         _activePicker.Show();
     }
 
     private void RefreshRuntimeState()
     {
-        var desktops = _virtualDesktopService.GetDesktops();
-
-        var signature = string.Join('|', desktops.Select(desktop => desktop.Id.ToString("D")));
-        if (!string.Equals(_lastDesktopSignature, signature, StringComparison.Ordinal))
-        {
-            _lastDesktopSignature = signature;
-            _windowMenuInjectionService.InvalidateCommands();
-        }
+        _ = _virtualDesktopService.GetDesktops();
     }
 
     private void ApplyNativeTitleBarTheme()

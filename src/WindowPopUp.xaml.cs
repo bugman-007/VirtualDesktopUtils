@@ -9,18 +9,15 @@ namespace VirtualDesktopUtils;
 public partial class WindowPopUp : Window
 {
     private readonly VirtualDesktopService _virtualDesktopService;
-    private readonly WindowMenuInjectionService _windowMenuInjectionService;
     private readonly nint _targetWindowHandle;
     private List<PickerItem> _items = new();
     private bool _closing;
 
     internal WindowPopUp(
         VirtualDesktopService virtualDesktopService,
-        WindowMenuInjectionService windowMenuInjectionService,
         nint targetWindowHandle)
     {
         _virtualDesktopService = virtualDesktopService;
-        _windowMenuInjectionService = windowMenuInjectionService;
         _targetWindowHandle = targetWindowHandle;
 
         InitializeComponent();
@@ -80,11 +77,7 @@ public partial class WindowPopUp : Window
     {
         try
         {
-            var (moved, _) = _virtualDesktopService.MoveWindowToDesktop(_targetWindowHandle, item.DesktopId);
-            if (moved)
-            {
-                _windowMenuInjectionService.InvalidateCommands();
-            }
+            _ = _virtualDesktopService.MoveWindowToDesktop(_targetWindowHandle, item.DesktopId);
         }
         catch
         {
@@ -106,7 +99,6 @@ public partial class WindowPopUp : Window
                 _virtualDesktopService.UnpinWindow(_targetWindowHandle);
             else
                 _virtualDesktopService.PinWindow(_targetWindowHandle);
-            _windowMenuInjectionService.InvalidateCommands();
         }
         catch
         {

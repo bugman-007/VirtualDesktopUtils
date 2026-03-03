@@ -39,25 +39,13 @@
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock FontSize="22" FontWeight="SemiBold" Text="Settings" />
 
         <CheckBox
-          x:Name="ContextMenuCheckBox"
-          Grid.Row="1"
-          Margin="0,12,0,8"
-          Content="Add context menu to app title bars"
-          FontSize="15"
-          Foreground="White"
-          Checked="ContextMenuCheckBox_OnChecked"
-          Unchecked="ContextMenuCheckBox_OnUnchecked"
-        />
-
-        <CheckBox
           x:Name="AutoRefreshCheckBox"
-          Grid.Row="2"
+          Grid.Row="1"
           Margin="0,4,0,8"
           Content="Auto-refresh desktop state"
           FontSize="15"
@@ -66,7 +54,7 @@
           Unchecked="AutoRefreshCheckBox_OnUnchecked"
         />
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal" VerticalAlignment="Center">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
           <TextBlock
             VerticalAlignment="Center"
             FontSize="15"
@@ -83,7 +71,7 @@
           />
         </StackPanel>
 
-        <DockPanel Grid.Row="4" Margin="0,10,0,0" LastChildFill="False">
+        <DockPanel Grid.Row="3" Margin="0,10,0,0" LastChildFill="False">
           <CheckBox
             x:Name="GuidAutoUpdateCheckBox"
             Content="Auto-update COM GUID config on startup"
@@ -130,7 +118,7 @@
         </DockPanel>
 
         <StackPanel
-          Grid.Row="5"
+          Grid.Row="4"
           Margin="0,10,0,0"
           Orientation="Horizontal"
           VerticalAlignment="Center"
@@ -167,7 +155,7 @@
         </StackPanel>
 
         <StackPanel
-          Grid.Row="6"
+          Grid.Row="5"
           Margin="0,10,0,0"
           Orientation="Horizontal"
           VerticalAlignment="Center"

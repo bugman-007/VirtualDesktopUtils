@@ -50,18 +50,6 @@ internal sealed class RuntimeConfigService
             LastUpdatedUtc: config.Guids.LastUpdatedUtc ?? string.Empty);
     }
 
-    public bool IsContextMenuEnabled()
-    {
-        return LoadConfig().EnableContextMenu;
-    }
-
-    public void SetContextMenuEnabled(bool enabled)
-    {
-        var config = LoadConfig();
-        config.EnableContextMenu = enabled;
-        SaveConfig(config);
-    }
-
     public bool IsGuidAutoUpdateOnStartupEnabled()
     {
         return LoadConfig().EnableGuidAutoUpdateOnStartup;
@@ -281,7 +269,6 @@ internal sealed class RuntimeConfigService
 
     private sealed class RuntimeConfig
     {
-        public bool EnableContextMenu { get; set; } = true;
         public bool EnableGuidAutoUpdateOnStartup { get; set; }
         public GuidConfigSection Guids { get; set; } = new();
         public HotkeyConfigSection PickerHotkey { get; set; } = new();
