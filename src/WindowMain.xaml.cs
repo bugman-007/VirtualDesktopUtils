@@ -183,6 +183,8 @@ public partial class WindowMain : Window
 
     private void HotkeyTextBox_GotFocus(object sender, RoutedEventArgs e)
     {
+        SuspendHotkeysForCapture();
+
         if (sender is System.Windows.Controls.TextBox tb)
         {
             tb.Background = new System.Windows.Media.SolidColorBrush(
@@ -207,6 +209,8 @@ public partial class WindowMain : Window
                     tb.Text = _runtimeConfigService.LoadMoveHotkeyConfiguration().DisplayText;
             }
         }
+
+        ResumeHotkeysAfterCapture();
     }
 
     private void PickerHotkeyTextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -228,59 +232,92 @@ public partial class WindowMain : Window
     private void MoveHotkeyTextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         e.Handled = true;
-        var (modifiers, _, display) = CaptureKeyCombo(e);
+
+        var key = ResolveEventKey(e);
+        var modifiers = CaptureModifiers(key);
         if (modifiers == 0) return;
 
         // For direct move, we only need the modifier (keys 1-9 are appended automatically)
         _moveModifiers = modifiers;
-        MoveHotkeyTextBox.Text = display.Contains('+') ? display[..display.LastIndexOf('+')] : display;
+        MoveHotkeyTextBox.Text = ModifiersToDisplay(modifiers);
         RegisterMoveHotkeys();
 
-        Keyboard.ClearFocus();
-        FocusManager.SetFocusedElement(this, this);
+        // Keep focus while user is still holding/adding modifier keys.
+        if (!IsModifierKey(key))
+        {
+            Keyboard.ClearFocus();
+            FocusManager.SetFocusedElement(this, this);
+        }
     }
 
     private static (uint Modifiers, uint Vk, string Display) CaptureKeyCombo(System.Windows.Input.KeyEventArgs e)
     {
-        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        var key = ResolveEventKey(e);
 
         // Ignore bare modifier presses
-        if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt
-            or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin)
+        if (IsModifierKey(key))
         {
             return (0, 0, "");
         }
 
-        uint modifiers = 0;
-        var parts = new List<string>();
-
-        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-        {
-            modifiers |= GlobalHotkeyService.ModControl;
-            parts.Add("Ctrl");
-        }
-        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
-        {
-            modifiers |= GlobalHotkeyService.ModAlt;
-            parts.Add("Alt");
-        }
-        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
-        {
-            modifiers |= GlobalHotkeyService.ModShift;
-            parts.Add("Shift");
-        }
-        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Windows))
-        {
-            modifiers |= GlobalHotkeyService.ModWin;
-            parts.Add("Win");
-        }
-
+        var modifiers = CaptureModifiers(key);
         if (modifiers == 0) return (0, 0, "");
 
         var vk = (uint)KeyInterop.VirtualKeyFromKey(key);
-        parts.Add(KeyToDisplayName(key));
+        var display = $"{ModifiersToDisplay(modifiers)}+{KeyToDisplayName(key)}";
+        return (modifiers, vk, display);
+    }
 
-        return (modifiers, vk, string.Join("+", parts));
+    private static Key ResolveEventKey(System.Windows.Input.KeyEventArgs e) =>
+        e.Key == Key.System ? e.SystemKey : e.Key;
+
+    private static bool IsModifierKey(Key key) =>
+        key is Key.LeftCtrl or Key.RightCtrl
+            or Key.LeftAlt or Key.RightAlt
+            or Key.LeftShift or Key.RightShift
+            or Key.LWin or Key.RWin;
+
+    private static uint CaptureModifiers(Key key)
+    {
+        var modifiers = 0u;
+
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) || key is Key.LeftCtrl or Key.RightCtrl)
+            modifiers |= GlobalHotkeyService.ModControl;
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt) || key is Key.LeftAlt or Key.RightAlt)
+            modifiers |= GlobalHotkeyService.ModAlt;
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) || key is Key.LeftShift or Key.RightShift)
+            modifiers |= GlobalHotkeyService.ModShift;
+        if (Keyboard.Modifiers.HasFlag(ModifierKeys.Windows) || key is Key.LWin or Key.RWin)
+            modifiers |= GlobalHotkeyService.ModWin;
+
+        return modifiers;
+    }
+
+    private static string ModifiersToDisplay(uint modifiers)
+    {
+        var parts = new List<string>();
+        if ((modifiers & GlobalHotkeyService.ModControl) != 0) parts.Add("Ctrl");
+        if ((modifiers & GlobalHotkeyService.ModAlt) != 0) parts.Add("Alt");
+        if ((modifiers & GlobalHotkeyService.ModShift) != 0) parts.Add("Shift");
+        if ((modifiers & GlobalHotkeyService.ModWin) != 0) parts.Add("Win");
+        return string.Join("+", parts);
+    }
+
+    private void SuspendHotkeysForCapture()
+    {
+        _globalHotkeyService.UnregisterPickerHotkey();
+        _globalHotkeyService.UnregisterMoveHotkeys();
+    }
+
+    private void ResumeHotkeysAfterCapture()
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        RegisterPickerHotkey();
+        RegisterMoveHotkeys();
     }
 
     private static string KeyToDisplayName(Key key) => key switch

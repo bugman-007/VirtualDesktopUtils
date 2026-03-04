@@ -12,7 +12,7 @@
     <Title>VirtualDesktopUtils</Title>
     <Company>woanware</Company>
     <Description>The best Windows virtual desktop utility application in the world, probably, maybe, not......but even so it's very useful</Description>
-    <FileVersion>0.0.1</FileVersion>
+    <FileVersion>0.0.2</FileVersion>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>VirtualDesktopUtils.ico</PackageIcon>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
