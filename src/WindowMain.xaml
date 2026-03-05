@@ -43,6 +43,14 @@
         </Grid.RowDefinitions>
 
         <TextBlock FontSize="22" FontWeight="SemiBold" Text="Settings" />
+        <TextBlock
+          x:Name="VersionTextBlock"
+          HorizontalAlignment="Right"
+          VerticalAlignment="Center"
+          FontSize="12"
+          Foreground="#80FFFFFF"
+          Text=""
+        />
 
         <CheckBox
           x:Name="AutoRefreshCheckBox"

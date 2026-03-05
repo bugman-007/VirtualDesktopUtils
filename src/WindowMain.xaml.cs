@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -56,6 +57,7 @@ public partial class WindowMain : Window
         StartWithWindowsCheckBox.IsChecked = _runtimeConfigService.IsStartWithWindowsEnabled();
         _suppressStartWithWindowsEvents = false;
         GuidAutoUpdateCheckBox.IsChecked = _runtimeConfigService.IsGuidAutoUpdateOnStartupEnabled();
+        VersionTextBlock.Text = $"Version {GetDisplayVersion()}";
 
         LoadSavedHotkeys();
 
@@ -436,6 +438,34 @@ public partial class WindowMain : Window
     private void RefreshRuntimeState()
     {
         _ = _virtualDesktopService.GetDesktops();
+    }
+
+    private static string GetDisplayVersion()
+    {
+        var processPath = Environment.ProcessPath;
+        if (!string.IsNullOrWhiteSpace(processPath))
+        {
+            try
+            {
+                var fileVersion = FileVersionInfo.GetVersionInfo(processPath).FileVersion;
+                if (!string.IsNullOrWhiteSpace(fileVersion))
+                {
+                    return fileVersion;
+                }
+            }
+            catch (ArgumentException)
+            {
+            }
+            catch (System.IO.IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+
+        var assemblyVersion = typeof(WindowMain).Assembly.GetName().Version;
+        return assemblyVersion?.ToString() ?? "unknown";
     }
 
     private void ApplyNativeTitleBarTheme()
