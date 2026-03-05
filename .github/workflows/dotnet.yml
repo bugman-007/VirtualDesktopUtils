@@ -22,10 +22,10 @@ jobs:
         dotnet-version: 10.0.x
         
     - name: Restore dependencies
-      run: dotnet restore src/VirtualDesktopUtils.sln
+      run: dotnet restore src/VirtualDesktopUtils.csproj
 
     - name: Build
-      run: dotnet build src/VirtualDesktopUtils.sln --no-restore
+      run: dotnet build src/VirtualDesktopUtils.csproj --no-restore
 
     - name: Test
-      run: dotnet test src/VirtualDesktopUtils.sln --no-build --verbosity normal
+      run: dotnet test src/VirtualDesktopUtils.csproj --no-build --verbosity normal
