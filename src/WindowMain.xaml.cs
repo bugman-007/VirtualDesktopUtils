@@ -530,21 +530,13 @@ public partial class WindowMain : Window
 
     private void OnMoveHotkeyTriggered(int desktopNumber)
     {
-        var targetWindow = GlobalHotkeyService.GetForegroundWindow();
-        var ownHandle = new WindowInteropHelper(this).Handle;
-        if (targetWindow == ownHandle || targetWindow == nint.Zero) return;
-
         var desktops = _virtualDesktopService.GetDesktops();
         if (desktopNumber < 1 || desktopNumber > desktops.Count) return;
 
         var targetDesktop = desktops[desktopNumber - 1];
         if (targetDesktop.IsCurrent) return;
 
-        var (moved, _) = _virtualDesktopService.MoveWindowToDesktop(targetWindow, targetDesktop.Id);
-        if (moved)
-        {
-            _virtualDesktopService.SwitchToDesktop(targetDesktop.Id);
-        }
+        _virtualDesktopService.SwitchToDesktop(targetDesktop.Id);
     }
 
     private WindowPopUp? _activePicker;
