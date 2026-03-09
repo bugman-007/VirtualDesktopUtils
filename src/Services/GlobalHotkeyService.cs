@@ -8,6 +8,7 @@ internal sealed class GlobalHotkeyService : IDisposable
     private const int WmHotkey = 0x0312;
     private const int PickerHotkeyId = 0xD600;
     private const int MoveHotkeyIdBase = 0xD5E0;
+    private const int MoveHotkeyNumpadIdBase = 0xD5F0;
     private const int MaxDesktops = 9;
     private const uint VkSpace = 0x20;
 
@@ -17,6 +18,7 @@ internal sealed class GlobalHotkeyService : IDisposable
     private Action<int>? _moveTriggered;
     private bool _pickerRegistered;
     private readonly bool[] _moveRegistered = new bool[MaxDesktops + 1];
+    private readonly bool[] _moveNumpadRegistered = new bool[MaxDesktops + 1];
     private bool _hookInstalled;
 
     public bool RegisterPickerHotkey(nint windowHandle, uint modifiers, uint vk, Action onTriggered)
@@ -37,9 +39,15 @@ internal sealed class GlobalHotkeyService : IDisposable
         var count = 0;
         for (var i = 1; i <= MaxDesktops; i++)
         {
-            var vk = (uint)(0x30 + i);
-            _moveRegistered[i] = RegisterHotKey(windowHandle, MoveHotkeyIdBase + i, modifiers | ModNoRepeat, vk);
+            // Register top row number keys (1-9)
+            var vkTopRow = (uint)(0x30 + i);
+            _moveRegistered[i] = RegisterHotKey(windowHandle, MoveHotkeyIdBase + i, modifiers | ModNoRepeat, vkTopRow);
             if (_moveRegistered[i]) count++;
+
+            // Register numpad keys (Numpad1-Numpad9)
+            var vkNumpad = (uint)(0x60 + i);
+            _moveNumpadRegistered[i] = RegisterHotKey(windowHandle, MoveHotkeyNumpadIdBase + i, modifiers | ModNoRepeat, vkNumpad);
+            if (_moveNumpadRegistered[i]) count++;
         }
 
         return count;
@@ -58,10 +66,18 @@ internal sealed class GlobalHotkeyService : IDisposable
     {
         for (var i = 1; i <= MaxDesktops; i++)
         {
+            // Unregister top row hotkeys
             if (_moveRegistered[i] && _windowHandle != nint.Zero)
             {
                 UnregisterHotKey(_windowHandle, MoveHotkeyIdBase + i);
                 _moveRegistered[i] = false;
+            }
+
+            // Unregister numpad hotkeys
+            if (_moveNumpadRegistered[i] && _windowHandle != nint.Zero)
+            {
+                UnregisterHotKey(_windowHandle, MoveHotkeyNumpadIdBase + i);
+                _moveNumpadRegistered[i] = false;
             }
         }
     }
@@ -103,10 +119,20 @@ internal sealed class GlobalHotkeyService : IDisposable
             return nint.Zero;
         }
 
+        // Check top row number keys
         var moveNumber = id - MoveHotkeyIdBase;
         if (moveNumber is >= 1 and <= MaxDesktops)
         {
             _moveTriggered?.Invoke(moveNumber);
+            handled = true;
+            return nint.Zero;
+        }
+
+        // Check numpad keys
+        var moveNumpadNumber = id - MoveHotkeyNumpadIdBase;
+        if (moveNumpadNumber is >= 1 and <= MaxDesktops)
+        {
+            _moveTriggered?.Invoke(moveNumpadNumber);
             handled = true;
         }
 
